@@ -1,0 +1,18 @@
+{
+  "name": "hyde",
+  "version": "1.0.0",
+  "description": "Electron-powered Jekyll asset assistant",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "~1.7.8"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.179.0",
+    "jquery": "^3.2.1"
+  }
+}

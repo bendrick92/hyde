@@ -1,0 +1,12 @@
+#output {
+    display: flex;
+    flex-wrap: wrap;
+}
+#output a.obj-block {
+    width: 8em;
+    height: 8em;
+    border: 1px solid #000000;
+    background-size: cover;
+    background-position: center;
+    box-sizing: border-box;
+}
