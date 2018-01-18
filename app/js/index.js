@@ -1,4 +1,5 @@
-const { app, remote, clipboard } = require('electron');
+const sharp = require('sharp');
+const { app, remote, clipboard, BrowserWindow, ipcRenderer } = require('electron');
 const { Menu, MenuItem } = remote;
 const appPath = remote.app.getAppPath();
 const AWS = require('aws-sdk');
@@ -18,12 +19,34 @@ window.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     if ($(e.target).attr('class') == 'obj-block') {
         var objPath = $(e.target).attr('data-src');
-        buildImgMenu($(e.target), objPath);
+        buildImgMenu(objPath);
         menu.popup(remote.getCurrentWindow());
     }
 }, false);
 
-function buildImgMenu(img, objPath) {
+document.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+});
+
+document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var files = e.dataTransfer.files;
+    
+    if (files.length > 0) {
+        var file = files[0];
+        var reader = new FileReader();
+        reader.onload = function(r) {
+            var base64Data = r.target.result;
+            ipcRenderer.send('request-upload-window', base64Data);
+        }
+        reader.readAsDataURL(file);
+    }
+})
+
+function buildImgMenu(objPath) {
     menu = new Menu();
     menu.append(new MenuItem ({
         label: 'Copy S3 URL',
@@ -37,18 +60,10 @@ function buildImgMenu(img, objPath) {
             clipboard.writeText(s3Config.customDomainName + '/' + objPath);
         }
     }));
-    menu.append(new MenuItem ({
-        label: 'Resize Image',
-        click () {
-            var to = $('<img>');
-            // TODO: Something with image that was clicked
-        }
-    }));
 }
 
 function initAWS() {
     AWS.config.loadFromPath(appPath + '/app/config/aws_sdk_config.json');
-    
     s3 = new AWS.S3();
 }
 
@@ -83,6 +98,26 @@ function loadFromBucket(bucketName, s3DomainName, customDomainName, initFolderNa
             }
             output.append(a);
         });
+    });
+}
+
+function uploadToBucket(bucketName, data) {
+    var params = { };
+}
+
+function getFromBucket(bucketName, fileName) {
+    var params = {
+        Bucket: bucketName,
+        Key: fileName
+    };
+
+    s3.getObject(params, function(err, data) {
+        if (err) {
+            console.log(err, err.stack);
+        }
+        else {
+            return data;
+        }
     });
 }
 
@@ -121,7 +156,6 @@ function getS3Objects(bucketName, folderName, imgOnly, callback) {
             });
         }
         
-        //objects.sort();
         objects = bubbleSort(objects);
 
         callback(objects);
@@ -133,15 +167,17 @@ function bubbleSort(array) {
 
     do {
         swapped = false;
-        for (var i = array.length - 1; i <= 0; i--) {
-            var currObjLevels = array[i].split('/').length;
-            var nextObjLevels = array[i + 1].split('/').length;
+        if (array.length > 1) {
+            for (var i = array.length - 1; i <= 0; i--) {
+                var currObjLevels = array[i].split('/').length;
+                var nextObjLevels = array[i + 1].split('/').length;
 
-            if (currObjLevels > nextObjLevels || array[i] > array[i + 1]) { // Sort based on # of path levels or alphabetical
-                var temp = array[i];
-                array[i] = array[i + 1];
-                array[i + 1] = temp;
-                swapped = true;
+                if (currObjLevels > nextObjLevels || array[i] > array[i + 1]) { // Sort based on # of path levels or alphabetical
+                    var temp = array[i];
+                    array[i] = array[i + 1];
+                    array[i + 1] = temp;
+                    swapped = true;
+                }
             }
         }
     } while (swapped);
