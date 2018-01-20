@@ -41,7 +41,7 @@ document.addEventListener('drop', (e) => {
         var reader = new FileReader();
         reader.onload = function(r) {
             var base64Data = r.target.result;
-            ipcRenderer.send('request-upload-window', base64Data);
+            ipcRenderer.send('create-upload-window', base64Data);
         }
         reader.readAsDataURL(file);
     }

@@ -38,31 +38,7 @@ let menuTemplate = [
 ];
 let menu = Menu.buildFromTemplate(menuTemplate);
 let preferencesWindow = null;
-let preferencesMenuTemplate = [
-    {
-        label: 'File',
-        submenu: [
-            {
-                label: 'Close',
-                role: 'close'
-            }
-        ]
-    }
-];
-let preferencesMenu = Menu.buildFromTemplate(preferencesMenuTemplate);
 let uploadWindow = null;
-let uploadMenuTemplate = [
-    {
-        label: 'File',
-        submenu: [
-            {
-                label: 'Close',
-                role: 'close'
-            }
-        ]
-    }
-];
-let uploadMenu = Menu.buildFromTemplate(uploadMenuTemplate);
 
 app.once('ready', function () {
     init(createWindow);
@@ -74,16 +50,27 @@ app.on('activate', function () {
     }
 });
 
-ipcMain.on('request-upload-window', function(event, arg) {
+ipcMain.on('reload-main-window', function() {
+    reloadWindow();
+});
+
+ipcMain.on('create-upload-window', function(event, arg) {
     createUploadWindow(arg);
 });
 
+ipcMain.on('close-preferences-window', function() {
+    closePreferencesWindow();
+});
+
+ipcMain.on('setup-complete', function() {
+    store.set('setupComplete', true);
+});
+
 function init(callback) {
-    if (store.has('s3DomainName') && !store.get('s3DomainName') === "") {
-        console.log('Has key');
-    }
-    else {
-        initializeStore();
+    createWindow();
+
+    initializeStore();
+    if (store.get('setupComplete') === '') {
         createPreferencesWindow();
     }
 
@@ -91,13 +78,24 @@ function init(callback) {
 }
 
 function initializeStore() {
-    store.set('awsAccessKeyId', '');
-    store.set('awsSecretAccessKey', '');
-    store.set('awsRegion', '');
-    store.set('s3BucketName', '');
-    store.set('s3DomainName', '');
-    store.set('s3CustomDomainName', '');
-    store.set('s3InitFolderName');
+    initializeStoreValue('setupComplete');
+    initializeStoreValue('awsAccessKeyId');
+    initializeStoreValue('awsSecretAccessKey');
+    initializeStoreValue('awsRegion');
+    initializeStoreValue('s3BucketName');
+    initializeStoreValue('s3DomainName');
+    initializeStoreValue('s3CustomDomainName');
+    initializeStoreValue('s3InitFolderName');
+}
+
+function initializeStoreValue(storeValue) {
+    if (!store.has(storeValue)) {
+        store.set(storeValue, '');
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 function createWindow() {
@@ -115,18 +113,19 @@ function createWindow() {
     }));
 
     window.on('closed', function () {
-        window = null;
+        app.quit();
     });
-
-
 }
 
-function createPreferencesWindow() {
-    Menu.setApplicationMenu(preferencesMenu);
-    
+function reloadWindow() {
+    window.reload();
+}
+
+function createPreferencesWindow() {    
     preferencesWindow = new BrowserWindow({
         width: 400,
-        height: 400
+        height: 400,
+        frame: false
     });
 
     preferencesWindow.loadURL(url.format({
@@ -143,12 +142,15 @@ function createPreferencesWindow() {
     });
 }
 
-function createUploadWindow(base64Data) {
-    Menu.setApplicationMenu(uploadMenu);
+function closePreferencesWindow() {
+    preferencesWindow.close();
+}
 
+function createUploadWindow(base64Data) {
     uploadWindow = new BrowserWindow({
         width: 400,
-        height: 400
+        height: 400,
+        frame: false
     });
 
     uploadWindow.loadURL(url.format({
@@ -163,6 +165,5 @@ function createUploadWindow(base64Data) {
 
     uploadWindow.on('closed', function () {
         uploadWindow = null;
-        Menu.setApplicationMenu(menu);
     });
 }
