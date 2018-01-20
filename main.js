@@ -58,6 +58,10 @@ ipcMain.on('create-upload-window', function(event, arg) {
     createUploadWindow(arg);
 });
 
+ipcMain.on('close-upload-window', function() {
+    closeUploadWindow();
+});
+
 ipcMain.on('close-preferences-window', function() {
     closePreferencesWindow();
 });
@@ -123,8 +127,8 @@ function reloadWindow() {
 
 function createPreferencesWindow() {    
     preferencesWindow = new BrowserWindow({
-        width: 400,
-        height: 400,
+        width: 600,
+        height: 600,
         frame: false
     });
 
@@ -134,7 +138,7 @@ function createPreferencesWindow() {
         slashes: true
     }));
 
-    preferencesWindow.webContents.openDevTools();
+    //preferencesWindow.webContents.openDevTools();
 
     preferencesWindow.on('closed', function () {
         preferencesWindow = null;
@@ -148,8 +152,8 @@ function closePreferencesWindow() {
 
 function createUploadWindow(base64Data) {
     uploadWindow = new BrowserWindow({
-        width: 400,
-        height: 400,
+        width: 800,
+        height: 800,
         frame: false
     });
 
@@ -163,7 +167,13 @@ function createUploadWindow(base64Data) {
         uploadWindow.webContents.send('load-base64Data', base64Data);
     });
 
+    uploadWindow.webContents.openDevTools();
+
     uploadWindow.on('closed', function () {
         uploadWindow = null;
     });
+}
+
+function closeUploadWindow() {
+    uploadWindow.close();
 }

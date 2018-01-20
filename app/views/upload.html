@@ -6,7 +6,24 @@
     <link rel="stylesheet" href="../css/upload.css">
   </head>
   <body>
-    <div id="output"></div>
+    <span id="validation-message"></span>
+    <form id="upload-form">
+      <div id="img-container"></div>
+      <div class="form-row">
+        <label for="file-name">File Name:</label>
+        <input id="file-name" name="file-name" type="text">
+      </div>
+      <div class="form-row">
+        <label for="width">Width:</label>
+        <input id="width" name="width" type="number">
+      </div>
+      <div class="form-row">
+        <label for="height">Height:</label>
+        <input id="height" name="height" type="number">
+      </div>
+      <input type="submit" value="Upload">
+      <a id="close">Close</a>
+    </form>
     <script>window.$ = window.jQuery = require('jquery');</script>
     <script>require('../js/upload.js')</script>
   </body>

@@ -11,14 +11,13 @@ var s3CustomDomainName = $('#s3-custom-domain-name');
 var s3InitFolderName = $('#s3-init-folder-name');
 var preferencesForm = $('#preferences-form');
 var validationMessage = $('#validation-message');
+var close = $('#close');
 
 init();
 
 preferencesForm.on('submit', function(e) {
     e.preventDefault();
     
-    console.log(validate());
-
     if (validate()) {
         store.set('awsAccessKeyId', awsAccessKeyId.val());
         store.set('awsSecretAccessKey', awsSecretAccessKey.val());
@@ -35,6 +34,10 @@ preferencesForm.on('submit', function(e) {
     else {
         validationMessage.html('Please complete all fields');
     }
+});
+
+close.on('click', function () {
+    ipcRenderer.send('close-preferences-window');
 });
 
 function init() {
