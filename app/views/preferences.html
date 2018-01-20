@@ -6,7 +6,22 @@
     <link rel="stylesheet" href="../css/preferences.css">
   </head>
   <body>
-    <div id="output"></div>
+    <div class="form-row">
+      <label for="s3-bucket-name">Bucket Name:</label>
+      <input id="s3-bucket-name" name="s3-bucket-name" type="text">
+    </div>
+    <div class="form-row">
+      <label for="s3-domain-name">Domain Name:</label>
+      <input id="s3-domain-name" name="s3-domain-name" type="text">
+    </div>
+    <div class="form-row">
+      <label for="s3-custom-domain-name">Custom Domain Name:</label>
+      <input id="s3-custom-domain-name" name="s3-custom-domain-name" type="text">
+    </div>
+    <div class="form-row">
+      <label for="s3-init-folder-name">Initial Folder:</label>
+      <input id="s3-init-folder-name" name="s3-init-folder-name" type="text">
+    </div>
     <script>window.$ = window.jQuery = require('jquery');</script>
     <script>require('../js/preferences.js')</script>
   </body>

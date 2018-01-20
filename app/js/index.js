@@ -3,16 +3,17 @@ const { app, remote, clipboard, BrowserWindow, ipcRenderer } = require('electron
 const { Menu, MenuItem } = remote;
 const appPath = remote.app.getAppPath();
 const AWS = require('aws-sdk');
-const s3Config = require('../config/aws_s3_config.json');
+const Store = require('electron-store');
+const store = new Store();
 const imgRegex = /.*(?:png|jpg|jpeg|gif|png|svg)/;
 
 let output = $('#output');
 
 initAWS();
-loadFromBucket(s3Config.bucketName, s3Config.s3DomainName, s3Config.customDomainName, s3Config.initFolderName);
+loadFromBucket(store.get('s3BucketName'), store.get('s3DomainName'), store.get('s3CustomDomainName'), store.get('s3InitFolderName'));
 
 $(document).on('click', '#output a', function () {
-    loadFromBucket(s3Config.bucketName, s3Config.s3DomainName, s3Config.customDomainName, $(this).attr('data-src'));
+    loadFromBucket(store.get('s3BucketName'), store.get('s3DomainName'), store.get('s3CustomDomainName'), $(this).attr('data-src'));
 });
 
 window.addEventListener('contextmenu', (e) => {
@@ -51,20 +52,23 @@ function buildImgMenu(objPath) {
     menu.append(new MenuItem ({
         label: 'Copy S3 URL',
         click () {
-            clipboard.writeText(s3Config.s3DomainName + '/' + s3Config.bucketName + '/' + objPath);
+            clipboard.writeText(store.get('s3DomainName') + '/' + store.get('s3BucketName') + '/' + objPath);
         }
     }));
     menu.append(new MenuItem ({
         label: 'Copy custom URL',
         click () {
-            clipboard.writeText(s3Config.customDomainName + '/' + objPath);
+            clipboard.writeText(store.get('s3CustomDomainName') + '/' + objPath);
         }
     }));
 }
 
 function initAWS() {
-    AWS.config.loadFromPath(appPath + '/app/config/aws_sdk_config.json');
-    s3 = new AWS.S3();
+    s3 = new AWS.S3({
+        accessKeyId: store.get('awsAccessKeyId'),
+        secretAccessKey: store.get('awsSecretAccessKey'),
+        region: store.get('awsRegion')
+    });
 }
 
 function loadFromBucket(bucketName, s3DomainName, customDomainName, initFolderName) {

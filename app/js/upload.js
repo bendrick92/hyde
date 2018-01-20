@@ -26,7 +26,7 @@ function resizeAndAppendImg(base64Data) {
 // For reference, the old resize function from the context menu */
 /*
 var img = document.createElement('img');
-img.src = s3Config.s3DomainName + '/' + s3Config.bucketName + '/' + objPath;
+img.src = store.get(s3DomainName) + '/' + store.get(s3BucketName) + '/' + objPath;
 img.id = 'temp-img';
 img.style.display = 'none';
 document.body.append(img);

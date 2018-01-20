@@ -1,6 +1,8 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
+const Store = require('electron-store');
+const store = new Store();
 
 let window = null;
 let menuTemplate = [
@@ -63,18 +65,40 @@ let uploadMenuTemplate = [
 let uploadMenu = Menu.buildFromTemplate(uploadMenuTemplate);
 
 app.once('ready', function () {
-    createWindow();
+    init(createWindow);
 });
 
 app.on('activate', function () {
     if (window === null) {
-        createWindow();
+        init(createWindow);
     }
 });
 
 ipcMain.on('request-upload-window', function(event, arg) {
     createUploadWindow(arg);
 });
+
+function init(callback) {
+    if (store.has('s3DomainName') && !store.get('s3DomainName') === "") {
+        console.log('Has key');
+    }
+    else {
+        initializeStore();
+        createPreferencesWindow();
+    }
+
+    callback;
+}
+
+function initializeStore() {
+    store.set('awsAccessKeyId', '');
+    store.set('awsSecretAccessKey', '');
+    store.set('awsRegion', '');
+    store.set('s3BucketName', '');
+    store.set('s3DomainName', '');
+    store.set('s3CustomDomainName', '');
+    store.set('s3InitFolderName');
+}
 
 function createWindow() {
     Menu.setApplicationMenu(menu);
@@ -93,6 +117,8 @@ function createWindow() {
     window.on('closed', function () {
         window = null;
     });
+
+
 }
 
 function createPreferencesWindow() {
@@ -108,6 +134,8 @@ function createPreferencesWindow() {
         protocol: 'file',
         slashes: true
     }));
+
+    preferencesWindow.webContents.openDevTools();
 
     preferencesWindow.on('closed', function () {
         preferencesWindow = null;
@@ -128,8 +156,6 @@ function createUploadWindow(base64Data) {
         protocol: 'file',
         slashes: true
     }));
-
-    uploadWindow.webContents.openDevTools();
 
     uploadWindow.webContents.on('did-finish-load', function() {
         uploadWindow.webContents.send('load-base64Data', base64Data);
