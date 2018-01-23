@@ -40,8 +40,8 @@ document.addEventListener('drop', (e) => {
         var file = files[0];
         var reader = new FileReader();
         reader.onload = function(r) {
-            var base64Data = r.target.result;
-            ipcRenderer.send('create-upload-window', base64Data);
+            var args = { base64Data: r.target.result, fileName: file.name, path: store.get('s3InitFolderName') };
+            ipcRenderer.send('create-upload-window', args);
         }
         reader.readAsDataURL(file);
     }
@@ -71,12 +71,18 @@ function initAWS() {
     });
 }
 
-function loadFromBucket(bucketName, s3DomainName, customDomainName, initFolderName) {
-    var folderPathParts = initFolderName.split('/');
-    var currFolder = folderPathParts[folderPathParts.length - 2] + '/';
-    var parentFolder = initFolderName.substring(0, initFolderName.length - currFolder.length);
+function loadFromBucket(bucketName, s3DomainName, customDomainName, folderName) {
+    var folderPathParts = folderName.split('/');
+    currFolder = folderPathParts[folderPathParts.length - 2];
+    if (!currFolder) {
+        currFolder = '';
+    }
+    else {
+        currFolder = currFolder + '/';
+    }
+    var parentFolder = folderName.substring(0, folderName.length - currFolder.length);
 
-    getS3Objects(bucketName, initFolderName, false, function (data) {
+    getS3Objects(bucketName, folderName, false, function (data) {
         output.empty();
 
         var topA = $('<a></a>');
@@ -102,6 +108,8 @@ function loadFromBucket(bucketName, s3DomainName, customDomainName, initFolderNa
             }
             output.append(a);
         });
+
+        store.set('s3InitFolderName', folderName);
     });
 }
 

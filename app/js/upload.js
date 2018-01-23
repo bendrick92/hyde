@@ -4,18 +4,20 @@ const AWS = require('aws-sdk');
 const Store = require('electron-store');
 const store = new Store();
 
+var imgMeta = '';
 var imgContentType = '';
 var imgData = '';
 var imgContainer = $('#img-container');
-var fileName = $('#file-name');
-var width = $('#width');
-var height = $('#height');
+var fileNameInput = $('#file-name');
+var widthInput = $('#width');
+var heightInput = $('#height');
 var uploadForm = $('#upload-form');
 var validationMessage = $('#validation-message');
-var close = $('#close');
+var preview = $('#preview');
+var cancel = $('#cancel');
 
 ipcRenderer.on('load-base64Data', (event, arg) => {
-    resizeAndAppendImg(arg);
+    init(arg.base64Data, arg.fileName, arg.path);
 });
 
 initAWS();
@@ -24,8 +26,8 @@ uploadForm.on('submit', function(e) {
     e.preventDefault();
 
     if (validate()) {
-        var sharpWidth = parseInt(width.val());
-        var sharpHeight = parseInt(height.val());
+        var sharpWidth = parseInt(widthInput.val());
+        var sharpHeight = parseInt(heightInput.val());
         var buffer = Buffer.from(imgData, 'base64');
 
         sharp(buffer)
@@ -37,12 +39,19 @@ uploadForm.on('submit', function(e) {
 
                 s3.upload({
                     Bucket: store.get('s3BucketName'),
-                    Key: fileName.val(),
+                    Key: fileNameInput.val(),
                     Body: resizedData,
                     ACL: 'public-read',
                     ContentType: imgContentType
                 }, function (err, data) {
-                    console.log(err, data);
+                    if (err) {
+                        console.log(err);
+                    }
+                    else {
+                        // TODO: Display success message
+                        ipcRenderer.send('reload-main-window');
+                        ipcRenderer.send('close-upload-window');
+                    }
                 });
             });
     }
@@ -51,35 +60,58 @@ uploadForm.on('submit', function(e) {
     }
 });
 
-close.on('click', function() {
+cancel.on('click', function(e) {
+    e.preventDefault();
+
     ipcRenderer.send('close-upload-window');
 });
 
-function resizeAndAppendImg(base64Data) {
+preview.on('click', function(e) {
+    e.preventDefault();
+
+    var newWidth = parseInt(widthInput.val()) || null;
+    var newHeight = parseInt(heightInput.val()) || null;
+    refreshPreview(newWidth, newHeight);
+});
+
+function init(base64Data, fileName, path) {
     var meta = base64Data.split(',')[0];
     var data = base64Data.split(',')[1];
+    imgMeta = meta;
     imgContentType = meta.split(':')[1].split(';')[0];
     imgData = data;
-    var buffer = Buffer.from(data, 'base64');
+
+    fileNameInput.val(path + fileName);
+
+    refreshPreview();
+}
+
+function refreshPreview(newWidth, newHeight) {
+    var buffer = Buffer.from(imgData, 'base64');
 
     sharp(buffer)
-        .resize(50, 50)
+        .resize(newWidth, newHeight)
         .toBuffer(function (err, resizedData, info) {
             if (err) {
                 console.log(err);
             }
 
-            var newImg = document.createElement('img');
-            newImg.src = meta + ',' + new Buffer(resizedData).toString('base64');
+            var newImg = $('<img>');
+            newImg.attr('src', imgMeta + ',' + new Buffer(resizedData).toString('base64'));
+            imgContainer.empty();
             imgContainer.append(newImg);
+            setTimeout(function() {
+                widthInput.val(newImg.width());
+                heightInput.val(newImg.height());
+            }, 0);
         });
 }
 
 function validate() {
     if (
-        fileName.val() &&
-        width.val() &&
-        height.val()
+        fileNameInput.val() &&
+        widthInput.val() &&
+        heightInput.val()
     ) {
         return true;
     }
@@ -95,26 +127,3 @@ function initAWS() {
         region: store.get('awsRegion')
     });
 }
-
-// For reference, the old resize function from the context menu */
-/*
-var img = document.createElement('img');
-img.src = store.get(s3DomainName) + '/' + store.get(s3BucketName) + '/' + objPath;
-img.id = 'temp-img';
-img.style.display = 'none';
-document.body.append(img);
-
-var can = document.createElement('canvas');
-can.width = img.width;
-can.height = img.height;
-can.id = 'temp-canvas';
-can.style.display = 'none';
-document.body.append(can);
-
-var canvas = document.getElementById('temp-canvas');
-var ctx = canvas.getContext('2d');
-var image = document.getElementById('temp-img');
-ctx.drawImage(image, 10, 10);
-
-var base64Data = canvas.toDataURL();
-*/
