@@ -13,8 +13,8 @@ var widthInput = $('#width');
 var heightInput = $('#height');
 var uploadForm = $('#upload-form');
 var validationMessage = $('#validation-message');
-var preview = $('#preview');
-var cancel = $('#cancel');
+var previewButton = $('#preview');
+var cancelButton = $('#cancel');
 
 ipcRenderer.on('load-base64Data', (event, arg) => {
     init(arg.base64Data, arg.fileName, arg.path);
@@ -60,13 +60,13 @@ uploadForm.on('submit', function(e) {
     }
 });
 
-cancel.on('click', function(e) {
+cancelButton.on('click', function(e) {
     e.preventDefault();
 
     ipcRenderer.send('close-upload-window');
 });
 
-preview.on('click', function(e) {
+previewButton.on('click', function(e) {
     e.preventDefault();
 
     var newWidth = parseInt(widthInput.val()) || null;

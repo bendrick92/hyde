@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Details</title>
+    <link rel="stylesheet" href="../css/details.css">
+  </head>
+  <body>
+    <span id="validation-message"></span>
+    <form id="details-form">
+      <input type="hidden" id="og-file-name" name="og-file-name">
+      <div class="form-row">
+        <label for="file-name">File Name:</label>
+        <input id="file-name" name="file-name" type="text">
+      </div>
+      <input type="submit" value="Save Changes">
+      <a id="delete" href="">Delete</a>
+      <a id="cancel" href="">Cancel</a>
+      <div id="img-container"></div>
+    </form>
+    <script>window.$ = window.jQuery = require('jquery');</script>
+    <script>require('../js/details.js')</script>
+  </body>
+</html>

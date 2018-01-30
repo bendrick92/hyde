@@ -13,7 +13,15 @@ initAWS();
 loadFromBucket(store.get('s3BucketName'), store.get('s3DomainName'), store.get('s3CustomDomainName'), store.get('s3InitFolderName'));
 
 $(document).on('click', '#output a', function () {
-    loadFromBucket(store.get('s3BucketName'), store.get('s3DomainName'), store.get('s3CustomDomainName'), $(this).attr('data-src'));
+    let src = $(this).attr('data-src');
+    
+    if (src.match(imgRegex)) {
+        let args = { fileName: src };
+        ipcRenderer.send('create-details-window', args);
+    }
+    else {
+        loadFromBucket(store.get('s3BucketName'), store.get('s3DomainName'), store.get('s3CustomDomainName'), $(this).attr('data-src'));
+    }
 });
 
 window.addEventListener('contextmenu', (e) => {
@@ -59,6 +67,12 @@ function buildImgMenu(objPath) {
         label: 'Copy custom URL',
         click () {
             clipboard.writeText(store.get('s3CustomDomainName') + '/' + objPath);
+        }
+    }));
+    menu.append(new MenuItem ({
+        label: 'Copy Markdown',
+        click () {
+            clipboard.writeText('![](' + store.get('s3CustomDomainName') + '/' + objPath + ')');
         }
     }));
 }
