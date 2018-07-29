@@ -9,4 +9,5 @@
     background-size: cover;
     background-position: center;
     box-sizing: border-box;
+    word-wrap: break-word;
 }
